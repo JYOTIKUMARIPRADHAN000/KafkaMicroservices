@@ -1,5 +1,9 @@
 package com.kafkaPaymentService.consumer;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -9,12 +13,12 @@ import com.kafkaPaymentService.result.PaymentResult;
 
 import tools.jackson.databind.ObjectMapper;
 
-
 @Service
 public class PaymentConsumer {
 
 	private final ObjectMapper objectMapper;
 	private final KafkaTemplate<String, String> kafkaTemplate;
+	private final Set<String> processedEvents = ConcurrentHashMap.newKeySet();
 
 	public PaymentConsumer(ObjectMapper objectMapper, KafkaTemplate<String, String> kafkaTemplate) {
 		this.objectMapper = objectMapper;
@@ -22,11 +26,24 @@ public class PaymentConsumer {
 	}
 
 	@KafkaListener(topics = "order-created", groupId = "payment-service")
-	public void consumeOrderCreated(String message) {
+	public void consumeOrderCreated(ConsumerRecord<String, String> record) {
+
+		String message = record.value();
+
+		System.out.println("Received → Topic: " + record.topic() + " | Partition: " + record.partition() + " | Offset: "
+				+ record.offset() + " | Key: " + record.key() + " | Message: " + message);
 
 		try {
 
 			PaymentEvent event = objectMapper.readValue(message, PaymentEvent.class);
+
+			// check with idempotency
+			String eventId = event.getEventId();
+
+			if (!processedEvents.add(eventId)) {
+				System.out.println("DUPLICATE EVENT DETECTED - Skipping eventId: " + eventId);
+				return;
+			}
 
 			System.out.println("Received Order Created Event: " + message);
 

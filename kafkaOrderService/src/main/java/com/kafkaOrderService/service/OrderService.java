@@ -54,6 +54,13 @@ public class OrderService {
 		String topic = "order-created";
 		// Convert Event Object → JSON
 		String eventJson = jsonToString(event);
+		// for (int i = 0; i < 300; i++) {
+		// kafkaService.sendMessage(topic, String.valueOf(orderResEntity.getOrderId()),
+		// eventJson);
+		// kafkaService.sendMessage(topic, String.valueOf(i), eventJson);
+
+		// }
+
 		kafkaService.sendMessage(topic, String.valueOf(orderResEntity.getOrderId()), eventJson);
 
 		OrderResponse response = new OrderResponse();

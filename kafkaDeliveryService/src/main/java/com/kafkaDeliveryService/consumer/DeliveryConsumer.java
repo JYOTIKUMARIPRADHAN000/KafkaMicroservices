@@ -1,5 +1,6 @@
 package com.kafkaDeliveryService.consumer;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -23,8 +24,17 @@ public class DeliveryConsumer {
 	}
 
 	@KafkaListener(topics = "payment-success", groupId = "delivery-service")
-	public void consumePaymentSuccess(String message) {
+	public void consumePaymentSuccess(ConsumerRecord<String, String> record) {
 
+	    String message = record.value();
+
+	    System.out.println(
+	        "Received → Topic: " + record.topic()
+	        + " | Partition: " + record.partition()
+	        + " | Offset: " + record.offset()
+	        + " | Key: " + record.key()
+	        + " | Message: " + message
+	    );
 		try {
 
 			DeliveryEvent event = objectMapper.readValue(message, DeliveryEvent.class);
