@@ -1,7 +1,9 @@
 package com.kafkaDeliveryService.consumer;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,7 @@ public class DeliveryConsumer {
 		this.kafkaTemplate = kafkaTemplate;
 	}
 
+	@RetryableTopic(attempts = "3")
 	@KafkaListener(topics = "payment-success", groupId = "delivery-service")
 	public void consumePaymentSuccess(ConsumerRecord<String, String> record) {
 
@@ -38,6 +41,10 @@ public class DeliveryConsumer {
 		try {
 
 			DeliveryEvent event = objectMapper.readValue(message, DeliveryEvent.class);
+
+		    if (event.getOrderId() == 9999) {
+		        throw new RuntimeException("Simulated delivery processing failure");
+		    }
 
 			System.out.println("Received Payment Success Event: " + message);
 
@@ -62,6 +69,21 @@ public class DeliveryConsumer {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			 // IMPORTANT: let Spring Kafka know processing failed
+		    throw new RuntimeException(e);
 		}
+	}
+	
+	@DltHandler
+	public void handleDlt(ConsumerRecord<String, String> record) {
+
+	    System.out.println(
+	        "PAYMENT SUCCESS DLT MESSAGE RECEIVED → "
+	        + "Topic: " + record.topic()
+	        + " | Partition: " + record.partition()
+	        + " | Offset: " + record.offset()
+	        + " | Key: " + record.key()
+	        + " | Message: " + record.value()
+	    );
 	}
 }

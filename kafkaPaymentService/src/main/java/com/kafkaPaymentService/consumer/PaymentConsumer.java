@@ -4,7 +4,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,8 @@ public class PaymentConsumer {
 		this.kafkaTemplate = kafkaTemplate;
 	}
 
+	
+	@RetryableTopic(attempts = "3")
 	@KafkaListener(topics = "order-created", groupId = "payment-service")
 	public void consumeOrderCreated(ConsumerRecord<String, String> record) {
 
@@ -36,6 +40,12 @@ public class PaymentConsumer {
 		try {
 
 			PaymentEvent event = objectMapper.readValue(message, PaymentEvent.class);
+			
+			//test dlt
+//			if (event.getOrderId() == 9999) {
+//			    throw new RuntimeException("Simulated payment processing failure");
+//			}
+			
 
 			// check with idempotency
 			String eventId = event.getEventId();
@@ -90,6 +100,23 @@ public class PaymentConsumer {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
+		
+		
+		
+	}
+	
+	
+	@DltHandler
+	public void handleDlt(ConsumerRecord<String, String> record) {
+
+	    System.out.println(
+	        "DLT MESSAGE RECEIVED → Topic: " + record.topic()
+	        + " | Partition: " + record.partition()
+	        + " | Offset: " + record.offset()
+	        + " | Key: " + record.key()
+	        + " | Message: " + record.value()
+	    );
 	}
 }
