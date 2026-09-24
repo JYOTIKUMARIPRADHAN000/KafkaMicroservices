@@ -12,7 +12,6 @@ import com.kafkaDeliveryService.result.DeliveryResult;
 
 import tools.jackson.databind.ObjectMapper;
 
-
 @Service
 public class DeliveryConsumer {
 
@@ -29,23 +28,21 @@ public class DeliveryConsumer {
 	@KafkaListener(topics = "payment-success", groupId = "delivery-service")
 	public void consumePaymentSuccess(ConsumerRecord<String, String> record) {
 
-	    String message = record.value();
+		String message = record.value();
 
-	    System.out.println(
-	        "Received → Topic: " + record.topic()
-	        + " | Partition: " + record.partition()
-	        + " | Offset: " + record.offset()
-	        + " | Key: " + record.key()
-	        + " | Message: " + message
-	    );
+		System.out.println("Received → Topic: " + record.topic() + " | Partition: " + record.partition() + " | Offset: "
+				+ record.offset() + " | Key: " + record.key() + " | Message: " + message);
 		try {
 
 			DeliveryEvent event = objectMapper.readValue(message, DeliveryEvent.class);
 
-		    if (event.getOrderId() == 9999) {
-		        throw new RuntimeException("Simulated delivery processing failure");
-		    }
+//		    if (event.getOrderId() == 9999) {
+//		        throw new RuntimeException("Simulated delivery processing failure");
+//		    }
 
+			if (event.getOrderId() >= 70 && event.getOrderId() < 75) {
+				throw new RuntimeException("Simulated delivery processing failure");
+			}
 			System.out.println("Received Payment Success Event: " + message);
 
 			DeliveryResult result = new DeliveryResult();
@@ -69,21 +66,16 @@ public class DeliveryConsumer {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			 // IMPORTANT: let Spring Kafka know processing failed
-		    throw new RuntimeException(e);
+			// IMPORTANT: let Spring Kafka know processing failed
+			throw new RuntimeException(e);
 		}
 	}
-	
+
 	@DltHandler
 	public void handleDlt(ConsumerRecord<String, String> record) {
 
-	    System.out.println(
-	        "PAYMENT SUCCESS DLT MESSAGE RECEIVED → "
-	        + "Topic: " + record.topic()
-	        + " | Partition: " + record.partition()
-	        + " | Offset: " + record.offset()
-	        + " | Key: " + record.key()
-	        + " | Message: " + record.value()
-	    );
+		System.out.println("PAYMENT SUCCESS DLT MESSAGE RECEIVED → " + "Topic: " + record.topic() + " | Partition: "
+				+ record.partition() + " | Offset: " + record.offset() + " | Key: " + record.key() + " | Message: "
+				+ record.value());
 	}
 }
