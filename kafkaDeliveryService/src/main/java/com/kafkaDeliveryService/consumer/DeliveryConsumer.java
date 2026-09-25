@@ -40,7 +40,7 @@ public class DeliveryConsumer {
 //		        throw new RuntimeException("Simulated delivery processing failure");
 //		    }
 
-			if (event.getOrderId() >= 70 && event.getOrderId() < 75) {
+			if (event.getDeliveryAddress().equals("pune")) {
 				throw new RuntimeException("Simulated delivery processing failure");
 			}
 			System.out.println("Received Payment Success Event: " + message);

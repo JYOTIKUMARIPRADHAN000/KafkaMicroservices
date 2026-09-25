@@ -73,7 +73,7 @@ public class PaymentConsumer {
 
 				String json = objectMapper.writeValueAsString(result);
 
-				kafkaTemplate.send("payment-success", json);
+				kafkaTemplate.send("payment-success",String.valueOf(event.getOrderId()), json);
 
 				System.out.println("Payment Successful: " + json);
 
@@ -93,7 +93,7 @@ public class PaymentConsumer {
 
 				String json = objectMapper.writeValueAsString(result);
 
-				kafkaTemplate.send("payment-failed", json);
+				kafkaTemplate.send("payment-failed", String.valueOf(event.getOrderId()),json);
 
 				System.out.println("Payment Failed: " + json);
 			}
