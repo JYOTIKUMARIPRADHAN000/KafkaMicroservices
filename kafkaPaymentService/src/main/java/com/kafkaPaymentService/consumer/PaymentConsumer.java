@@ -40,6 +40,8 @@ public class PaymentConsumer {
 		try {
 
 			PaymentEvent event = objectMapper.readValue(message, PaymentEvent.class);
+			//trying to slow down the payment service consumer intentionally to check load etc
+			//Thread.sleep(2000);
 			
 			//test dlt
 //			if (event.getOrderId() == 9999) {

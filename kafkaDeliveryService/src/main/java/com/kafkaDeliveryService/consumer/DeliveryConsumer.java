@@ -5,6 +5,7 @@ import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
 import com.kafkaDeliveryService.event.DeliveryEvent;
@@ -26,7 +27,13 @@ public class DeliveryConsumer {
 
 	@RetryableTopic(attempts = "3")
 	@KafkaListener(topics = "payment-success", groupId = "delivery-service")
-	public void consumePaymentSuccess(ConsumerRecord<String, String> record) {
+	public void consumePaymentSuccess(ConsumerRecord<String, String> record
+	// Acknowledgment acknowledgment
+	)
+	// throws InterruptedException
+	{
+
+		// Thread.sleep(30000);
 
 		String message = record.value();
 
@@ -39,10 +46,11 @@ public class DeliveryConsumer {
 //		    if (event.getOrderId() == 9999) {
 //		        throw new RuntimeException("Simulated delivery processing failure");
 //		    }
-
+//dlt testing .... restoring also
 			if (event.getDeliveryAddress().equals("pune")) {
 				throw new RuntimeException("Simulated delivery processing failure");
 			}
+
 			System.out.println("Received Payment Success Event: " + message);
 
 			DeliveryResult result = new DeliveryResult();
@@ -63,10 +71,11 @@ public class DeliveryConsumer {
 			kafkaTemplate.send("delivery-created", String.valueOf(event.getOrderId()), json);
 
 			System.out.println("Delivery Created: " + json);
+			// acknowledgment.acknowledge();
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			// IMPORTANT: let Spring Kafka know processing failed
+			// let Spring Kafka know processing failed
 			throw new RuntimeException(e);
 		}
 	}
